@@ -1,7 +1,10 @@
 # COMP 3203 A: Assignment 1
 ## Team
 - Michael Lutaaya (Student #100843544)
+- Guelor  Emauel  (Student #100884107)
 - **UPDATE WITH NAMES AND STUDENT NUMBERS**
+
+## Classes Description (Pattern)
 
 ## Compilation Instructions
 - To build the client and server in one step, type `make all` into the command line.
