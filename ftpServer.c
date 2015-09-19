@@ -25,7 +25,8 @@ int writeMessageToClient(int clientSock, char* buff);
 int main(int argc, char* argv[]) {
 
 
-	int	checkSocketConnectionSuccessful, portNo, newSocketForClient, clientLen;
+	int	checkSocketConnectionSuccessful, portNo, newSocketForClient;
+	socklen_t clientLen;
 	char 	buffer[MAX_BUFF_LEN];
 	struct 	sockaddr_in server_addr, client_addr;
 
