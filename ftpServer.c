@@ -18,6 +18,8 @@ void errorMessage(char *msg) {
 int createSocket();
 int readMessage(int, char*);
 int writeMessage(int, char*);
+int readMessageFromClient(int clientSock, char* buff);
+int writeMessageToClient(int clientSock, char* buff);
 
 int main(int argc, char* argv[]) {
 
