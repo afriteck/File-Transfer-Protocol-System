@@ -5,9 +5,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
-
-#define MAX_BUFF_LEN 256
-
+#include "ftpDefs.h"
 
 void errorMessage(char *msg) {
 
@@ -15,12 +13,6 @@ void errorMessage(char *msg) {
 	exit(1);
 
 }
-
-int createSocket();
-int readMessage(int, char*);
-int writeMessage(int, char*);
-int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
-int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
 
 int main(int argc, char* argv[]) {
 

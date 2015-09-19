@@ -6,8 +6,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <unistd.h>
-
-#define MAX_BUFF_LEN 1024
+#include "ftpDefs.h"
 
 void errorMessage(char *msg) {
 
@@ -15,9 +14,6 @@ void errorMessage(char *msg) {
         exit(0);
 
 }
-
-int sendMessageToServer(int serverSock, char* buff);
-int receiveMessageFromServer(int serverSock, char* buff);
 
 int main(int argc, char* argv[]) {
 
