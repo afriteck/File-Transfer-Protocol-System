@@ -65,21 +65,24 @@ int main(int argc, char* argv[]) {
 
 
 	// Accept connection when client sends a request
-	newSocketForClient = accept(checkSocketConnectionSuccessful, (struct sockaddr *) &client_addr, &clientLen);
 
-	if(newSocketForClient < 0) {
+	do {
+		newSocketForClient = accept(checkSocketConnectionSuccessful, (struct sockaddr *) &client_addr, &clientLen);
 
-		errorMessage("Error accepting connection\n");
-	}
+		if(newSocketForClient < 0) {
+
+			errorMessage("Error accepting connection\n");
+		}
 
 	// Just to make sure my buffer is all clear and set to use I will clear it again just to be safe
-	bzero(buffer, 256);
+		bzero(buffer, 256);
 
 	// read message received from client
-	readMessageFromClient(newSocketForClient, &buffer);
+		readMessageFromClient(newSocketForClient, &buffer);
 
 	// send message to client
-	writeMessageToClient(newSocketForClient, &buffer);
+		writeMessageToClient(newSocketForClient, &buffer);
+	} while (1);
 
 	return 0;
 }
