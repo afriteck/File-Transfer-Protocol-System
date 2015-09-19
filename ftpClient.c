@@ -16,7 +16,8 @@ void errorMessage(char *msg) {
 
 }
 
-
+int sendMessageToServer(int serverSock, char* buff);
+int receiveMessageFromServer(int serverSock, char* buff);
 
 int main(int argc, char* argv[]) {
 
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
 		exit(0);
 	}
 
-	
+
 
 
 	// clear my resources used from my sockets always to be safe
@@ -81,7 +82,7 @@ int main(int argc, char* argv[]) {
 
 	sendMessageToServer(checkSocketConnectionSuccessful, buffer);
 	receiveMessageFromServer(checkSocketConnectionSuccessful, buffer);
-	
+
 	return 0;
 
 }
@@ -121,13 +122,13 @@ int receiveMessageFromServer(int serverSock, char* buff) {
 
 	// read from the server sock
 	n = read(serverSock, buff, MAX_BUFF_LEN);
-	
+
 	if(n < 0) {
 
 		errorMessage("Error reading from the socket");
 		return -1;
 	}
 
-	printf("%s\n", buff);	
+	printf("%s\n", buff);
 	return 0;
 }
