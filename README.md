@@ -15,7 +15,7 @@ Since TCP/IP network programs involve three basic pattens of usage or behaviors:
 
 ## Compilation Instructions
 - To build the client and server in one step, type `make all` into the command line.
-- The client and server can also be built individually by typing `make client` or `make server.`
+- The client and server can also be built individually by typing `make -f Makefile.server` or `make -f Makefile.client`
 
 ## Launching Instructions
 To begin using the application, the server must be launched before the client.
