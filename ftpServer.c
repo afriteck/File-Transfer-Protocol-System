@@ -29,29 +29,29 @@ int main(int argc, char* argv[]) {
 
 	/* Do a basic error check if the command line argument is not complete throw an error am using
          * exit(1) to flag an error which is un successful termination */
-	if (argc < 0) {
+	if (argc < 2) {
 
                 fprintf(stderr,"ERROR, no port was specified in your command line argument\n");
                 exit(1);
 
         }
-	
+
 
 	// Create a socket and check if it was successful or not
 	checkSocketConnectionSuccessful = createSocket();
-	
+
 	if(checkSocketConnectionSuccessful < 0) {
 		errorMessage("Error opening socket");
 	}
 
-	/* Before I use my server address I will like to clear and 
+	/* Before I use my server address I will like to clear and
 	 * release it of anything that was using it previously so I
 	 * can use it from a fresh and free of all junks LOL */
 	bzero((char*) &server_addr, sizeof(server_addr));
 
 
 	// Now I want to store my port no which I will retrieve from my command line argument
-	portNo = atoi(argv[1]);	
+	portNo = atoi(argv[1]);
 
 	// Initialize my server address
 	server_addr.sin_family 		= AF_INET;
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 	listen(checkSocketConnectionSuccessful, 10);
 
 	clientLen = sizeof(client_addr);
-		
+
 
 	// Accept connection when client sends a request
 	newSocketForClient = accept(checkSocketConnectionSuccessful, (struct sockaddr *) &client_addr, &clientLen);
