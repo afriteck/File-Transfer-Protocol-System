@@ -1,26 +1,40 @@
-#include <cstdlib>
-#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string>
+#include "tcpconnector.h"
+
 using namespace std;
 
-int main(int argc, char *argv[]) {
-  int port_number = -1;
-  string ip_address;
-
-  for (int i = 0; i < argc; ++i) {
-    if (strcmp(argv[i], "-port") == 0 && i + 1 < argc) {
-      port_number = atoi(argv[i+1]);
-    } else if (strcmp(argv[i], "-ip") == 0 && i + 1 < argc) {
-      ip_address = argv[i+1];
-    }
+int main(int argc, char** argv) {
+  if (argc != 3) {
+    printf("usage: %s <port> <ip>\n", argv[0]);
+    exit(1);
   }
-
-  if (port_number == -1 || ip_address.empty()) {
-    cout << "The following argument format must be used: `./client -port "
-         << "<portnumber>` -ip <ipaddress>" << endl;
-    return EXIT_FAILURE;
+  int len;
+  string message;
+  char line[256];
+  TCPConnector* connector = new TCPConnector();
+  TCPStream* stream = connector->connect(argv[2], atoi(argv[1]));
+  
+  if (stream) {
+    message = "Is there life on Mars?";
+    stream->send(message.c_str(), message.size());
+    printf("sent - %s\n", message.c_str());
+    len = stream->receive(line, sizeof(line));
+    line[len] = NULL;
+    printf("received - %s\n", line);
+    delete stream;
   }
-
-  cout << "Connecting to " << ip_address << " on port " << port_number << endl;
-  return EXIT_SUCCESS;
+  stream = connector->connect(argv[2], atoi(argv[1]));
+  
+  if (stream) {
+    message = "Why is there air?";
+    stream->send(message.c_str(), message.size());
+    printf("sent - %s\n", message.c_str());
+    len = stream->receive(line, sizeof(line));
+    line[len] = NULL;
+    printf("received - %s\n", line);
+    delete stream;
+  }
+  exit(0);
 }

@@ -1,22 +1,37 @@
-#include <cstdlib>
-#include <iostream>
-#include <string>
-using namespace std;
+#include <stdio.h>
+#include <stdlib.h>
+#include "tcpacceptor.h"
 
-int main(int argc, char *argv[]) {
-  int port_number = -1;
-  for (int i = 0; i < argc; ++i) {
-    if (strcmp(argv[i], "-port") == 0 && i + 1 < argc) {
-      port_number = atoi(argv[i+1]);
+int main(int argc, char** argv) {
+
+  if (argc < 2 || argc > 4) {
+    printf("usage: server <port> [<ip>]\n");
+    exit(1);
+  }
+    TCPStream* stream = NULL;
+    TCPAcceptor* acceptor = NULL;
+    
+    if (argc == 3) {
+      acceptor = new TCPAcceptor(atoi(argv[1]), argv[2]);
     }
+    else {
+      acceptor = new TCPAcceptor(atoi(argv[1]));
+    }
+    if (acceptor->start() == 0) {
+      while (1) {
+        stream = acceptor->accept();
+	if (stream != NULL) {
+          ssize_t len;
+	  char line[256];
+	  while ((len = stream->receive(line, sizeof(line))) > 0) {
+	    line[len] = 0;
+	    printf("received - %s\n", line);
+	    stream->send(line, len);
+	  } 
+	  delete stream;
+	}
+      } 
+    }
+    exit(0);
   }
 
-  if (port_number == -1) {
-    cout << "The following argument format must be used: `./server -port "
-         << "<portnumber>`" << endl;
-    return EXIT_FAILURE;
-  }
-
-  cout << "Listening for requests at port " << port_number << endl;
-  return EXIT_SUCCESS;
-}
