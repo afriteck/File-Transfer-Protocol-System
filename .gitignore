@@ -28,6 +28,8 @@
 *.i*86
 *.x86_64
 *.hex
+ftpClient
+ftpServer
 
 # Debug files
 *.dSYM/
