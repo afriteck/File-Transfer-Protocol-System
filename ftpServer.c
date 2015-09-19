@@ -19,11 +19,10 @@ void errorMessage(char *msg) {
 int createSocket();
 int readMessage(int, char*);
 int writeMessage(int, char*);
-int readMessageFromClient(int clientSock, char* buff);
-int writeMessageToClient(int clientSock, char* buff);
+int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
+int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
 
 int main(int argc, char* argv[]) {
-
 
 	int	checkSocketConnectionSuccessful, portNo, newSocketForClient;
 	socklen_t clientLen;
@@ -100,7 +99,7 @@ int createSocket() {
 }
 
 
-int readMessageFromClient(int clientSock, char* buff) {
+int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
 
 	int n;
 
@@ -112,13 +111,13 @@ int readMessageFromClient(int clientSock, char* buff) {
 	}
 
 	else {
-		printf("Message received From the client: %s\n", buff);
+		printf("Message received From the client: %s\n", (char *)buff);
 		return 0;
 	}
 
 }
 
-int writeMessageToClient(int clientSock, char* buff) {
+int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
 
 	int n;
 
