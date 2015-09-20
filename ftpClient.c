@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 
   // Check if command lind argument supplied is sufficient enough to proceed
   if (argc < 3) {
-    fprintf(stderr, "usage %s hostname port", argv[0]);
+    fprintf(stderr, "usage: %s <hostname> <port>\n", argv[0]);
     exit(0);
   }
 
