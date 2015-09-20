@@ -106,7 +106,7 @@ int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
   int n;
 
   char *message = "I got your message";
-  n = write(clientSock, message, sizeof(message));
+  n = write(clientSock, message, strlen(message));
 
   if(n < 0) {
     errorMessage("Error writing to the client socket");
