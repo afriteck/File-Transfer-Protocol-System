@@ -17,12 +17,12 @@ int main(int argc, char *argv[]) {
     port_number);
   fflush(stdout);
 
+  int accept_socket = -1;
+  acceptIncomingConnection(&listen_socket, &accept_socket);
+
   char buffer[MAX_BUFF_LEN];
   while (1) {
     bzero(buffer, MAX_BUFF_LEN);
-
-    int accept_socket = -1;
-    acceptIncomingConnection(&listen_socket, &accept_socket);
     readMessageFromClient(accept_socket, &buffer);
     writeMessageToClient(accept_socket, &buffer);
   }

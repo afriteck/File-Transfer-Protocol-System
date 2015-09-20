@@ -11,14 +11,16 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-	char *ip_address = argv[1];
+  char *ip_address = argv[1];
   int port_number = atoi(argv[2]), descriptor = -1;
   connectToServer(ip_address, port_number, &descriptor);
   printf("Initiated connection to %s at port %d.\n\n", ip_address, port_number);
 
-	char buffer[MAX_BUFF_LEN];
-  sendMessageToServer(descriptor, buffer);
-  receiveMessageFromServer(descriptor, buffer);
+  char buffer[MAX_BUFF_LEN];
+  while (1) {
+    sendMessageToServer(descriptor, buffer);
+    receiveMessageFromServer(descriptor, buffer);
+  }
 
   // TODO: close socket
   return 0;
