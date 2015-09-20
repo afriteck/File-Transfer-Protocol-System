@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
@@ -20,67 +18,43 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  int  checkSocketConnectionSuccessful, portNo, newSocketForClient;
-  socklen_t clientLen;
-  char   buffer[MAX_BUFF_LEN];
-  struct   sockaddr_in server_addr, client_addr;
+	int port_number = atoi(argv[1]);
+  struct sockaddr_in server_addr;
+  bzero(&server_addr, sizeof(server_addr));
 
-  // Create a socket and check if it was successful or not
-  checkSocketConnectionSuccessful = createSocket();
+  // `htons` ensures that bytes are stored in memory in network byte order
+	server_addr.sin_port = htons(port_number);
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_addr.s_addr = INADDR_ANY;
 
-  if(checkSocketConnectionSuccessful < 0) {
-    errorMessage("Error opening socket");
+  int listenSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (listenSocket < 0) {
+    errorMessage("Can't create socket\n");
   }
 
-  /* Before I use my server address I will like to clear and
-   * release it of anything that was using it previously so I
-   * can use it from a fresh and free of all junks LOL */
-  bzero((char*) &server_addr, sizeof(server_addr));
-
-  // Now I want to store my port no which I will retrieve from my command line argument
-  portNo = atoi(argv[1]);
-
-  // Initialize my server address
-  server_addr.sin_family     = AF_INET;
-  server_addr.sin_addr.s_addr   = INADDR_ANY;
-  server_addr.sin_port     = htons(portNo);
-
-  // Bind my socket
-  if(bind(checkSocketConnectionSuccessful, (struct sockaddr *) &server_addr,sizeof(server_addr)) < 0)  {
-    errorMessage("Error Binding the IP address, try again! ");
+  // Bind the socket to an IP address and port number
+  socklen_t server_addr_len = (socklen_t) sizeof(server_addr);
+  if (bind(listenSocket, (struct sockaddr *) &server_addr, server_addr_len) < 0) {
+    errorMessage("Can't bind socket\n");
   }
 
-  // Listen for connection, the number 10 is the maximum no. of clients the server should allow
-  listen(checkSocketConnectionSuccessful, 10);
+  listen(listenSocket, MAX_PENDING_CONNECTIONS);
 
-  clientLen = sizeof(client_addr);
-
-  // Accept connection when client sends a request
-
-  do {
-    newSocketForClient = accept(checkSocketConnectionSuccessful, (struct sockaddr *) &client_addr, &clientLen);
-
-    if(newSocketForClient < 0) {
-
+  char buffer[MAX_BUFF_LEN];
+  while (1) {
+		struct sockaddr_in client_addr;
+	  socklen_t client_addr_len = sizeof(client_addr);
+    int acceptSocket = accept(listenSocket, (struct sockaddr *) &client_addr, &client_addr_len);
+    if (acceptSocket < 0) {
       errorMessage("Error accepting connection\n");
     }
 
-  // Just to make sure my buffer is all clear and set to use I will clear it again just to be safe
-    bzero(buffer, 256);
-
-  // read message received from client
-    readMessageFromClient(newSocketForClient, &buffer);
-
-  // send message to client
-    writeMessageToClient(newSocketForClient, &buffer);
-  } while (1);
+    bzero(buffer, MAX_BUFF_LEN);
+    readMessageFromClient(acceptSocket, &buffer);
+    writeMessageToClient(acceptSocket, &buffer);
+  }
 
   return 0;
-}
-
-int createSocket() {
-	// TODO: this could be moved to a networking.c file
-  return socket(AF_INET, SOCK_STREAM, 0);
 }
 
 int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {

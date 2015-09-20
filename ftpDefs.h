@@ -1,4 +1,5 @@
 #define MAX_BUFF_LEN 1024
+#define MAX_PENDING_CONNECTIONS 10
 
 // Client
 int sendMessageToServer(int serverSock, char* buff);
