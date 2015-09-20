@@ -5,12 +5,6 @@
 #include <unistd.h>
 #include "ftpDefs.h"
 
-// TODO: Duplicate code shouldn't exist
-void errorMessage(char *msg) {
-  perror(msg);
-  exit(1);
-}
-
 int main(int argc, char *argv[]) {
 	// Do not continue unless all arguments have been provided
   if (argc < 2) {
@@ -29,13 +23,13 @@ int main(int argc, char *argv[]) {
 
   int listenSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (listenSocket < 0) {
-    errorMessage("Can't create socket\n");
+    printErrorMsg("Can't create socket\n");
   }
 
   // Bind the socket to an IP address and port number
   socklen_t server_addr_len = (socklen_t) sizeof(server_addr);
   if (bind(listenSocket, (struct sockaddr *) &server_addr, server_addr_len) < 0) {
-    errorMessage("Can't bind socket\n");
+    printErrorMsg("Can't bind socket\n");
   }
 
   listen(listenSocket, MAX_PENDING_CONNECTIONS);
@@ -46,7 +40,7 @@ int main(int argc, char *argv[]) {
 	  socklen_t client_addr_len = sizeof(client_addr);
     int acceptSocket = accept(listenSocket, (struct sockaddr *) &client_addr, &client_addr_len);
     if (acceptSocket < 0) {
-      errorMessage("Error accepting connection\n");
+      printErrorMsg("Error accepting connection\n");
     }
 
     bzero(buffer, MAX_BUFF_LEN);
@@ -64,7 +58,7 @@ int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
   n = read(clientSock, buff, MAX_BUFF_LEN);
 
   if(n < 0) {
-    errorMessage("Error reading from the client socket");
+    printErrorMsg("Error reading from the client socket");
     return -1;
   }
 
@@ -83,7 +77,7 @@ int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
   n = write(clientSock, message, strlen(message));
 
   if(n < 0) {
-    errorMessage("Error writing to the client socket");
+    printErrorMsg("Error writing to the client socket");
     return -1;
   }
 

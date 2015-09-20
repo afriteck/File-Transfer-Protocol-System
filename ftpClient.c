@@ -6,11 +6,6 @@
 #include <arpa/inet.h>
 #include "ftpDefs.h"
 
-void errorMessage(char *msg) {
-  perror(msg);
-  exit(0);
-}
-
 int main(int argc, char *argv[]) {
   // Do not continue unless all arguments have been provided
   if (argc < 3) {
@@ -27,18 +22,18 @@ int main(int argc, char *argv[]) {
 	address.sin_port = htons(port_number);
 	address.sin_family = AF_INET;
   if (inet_pton(address.sin_family, ip_address, &address.sin_addr.s_addr) != 1) {
-  	errorMessage("Can't parse IP address or system error occurred\n");
+  	printErrorMsg("Can't parse IP address or system error occurred\n");
   }
 
   // Create a socket using TCP
  	int descriptor;
   if ((descriptor = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-    errorMessage("Can't create socket\n");
+    printErrorMsg("Can't create socket\n");
   }
 
   // Initiate a connection on the socket
   if (connect(descriptor, (struct sockaddr *) &address, sizeof(address)) < 0) {
-    errorMessage("Can't initiate connection on socket\n");
+    printErrorMsg("Can't initiate connection on socket\n");
   }
 
   printf("Initiated connection to %s at port %d.\n\n", ip_address, port_number);
@@ -61,7 +56,7 @@ int sendMessageToServer(int serverSock, char* buff) {
   n = write(serverSock, buff, strlen(buff));
 
   if (n < 0) {
-    errorMessage("Error writing to the client socket");
+    printErrorMsg("Error writing to the client socket");
     return -1;
   }
 
@@ -78,7 +73,7 @@ int receiveMessageFromServer(int serverSock, char* buff) {
   n = read(serverSock, buff, MAX_BUFF_LEN);
 
   if (n < 0) {
-    errorMessage("Error reading from the socket");
+    printErrorMsg("Error reading from the socket");
     return -1;
   }
 
