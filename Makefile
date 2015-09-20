@@ -8,12 +8,12 @@ ftpServer: utilities.o ftpServer.o networking.o
 
 ftpServer.o: ftpServer.c ftpDefs.h
 
-ftpClient: utilities.o ftpClient.o
-	$(CXX) $(CXX_FLAGS) -o ./ftpClient utilities.o ftpClient.o
+ftpClient: networking.o utilities.o ftpClient.o
+	$(CXX) $(CXX_FLAGS) -o ./ftpClient networking.o utilities.o ftpClient.o
 
 ftpClient.o: ftpClient.c ftpDefs.h
 
-networking.o: networking.c
+networking.o: networking.c ftpDefs.h
 
 utilities.o: utilities.c
 	$(CXX) $(CXX_FLAGS) -c utilities.c

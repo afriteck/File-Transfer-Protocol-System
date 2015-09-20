@@ -12,6 +12,7 @@ int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
 // Networking - Sockets
 void setupListenSocket(int port, int *listen_socket);
 void acceptIncomingConnection(int *listen_socket, int *accept_socket);
+void connectToServer(char *ip_address, int port, int *descriptor);
 
 // Utilities
 void printErrorMsg(char *msg);
