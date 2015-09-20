@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 
   int port_number = atoi(argv[1]), listen_socket = -1;
   setupListenSocket(port_number, &listen_socket);
-  printf("The server is ready to accept connections on port %d.\n",
+  printf("Accepting connections on port %d.\n",
     port_number);
   fflush(stdout);
 
