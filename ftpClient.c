@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include "ftpDefs.h"
 
 void errorMessage(char *msg) {
@@ -13,59 +11,41 @@ void errorMessage(char *msg) {
   exit(0);
 }
 
-int main(int argc, char* argv[]) {
-  int   checkSocketConnectionSuccessful, portNo;
-  struct   sockaddr_in server_addr;
-  struct  hostent *server;
-
-  char  buffer[MAX_BUFF_LEN];
-
-  // Check if command lind argument supplied is sufficient enough to proceed
+int main(int argc, char *argv[]) {
+  // Do not continue unless all arguments have been provided
   if (argc < 3) {
-    fprintf(stderr, "usage: %s <hostname> <port>\n", argv[0]);
+    fprintf(stderr, "usage: %s <ipaddress> <port>\n", argv[0]);
     exit(0);
   }
 
-  // Get my port number
-  portNo = atoi(argv[2]);
+	char *ip_address = argv[1];
+  int port_number = atoi(argv[2]);
+  struct sockaddr_in address;
+  bzero(&address, sizeof(address));
 
-  // Create a socket
-  checkSocketConnectionSuccessful = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-  if (checkSocketConnectionSuccessful < 0) {
-    errorMessage("Error cannot create a socket");
+  // `htons` ensures that bytes are stored in memory in network byte order
+	address.sin_port = htons(port_number);
+	address.sin_family = AF_INET;
+  if (inet_pton(address.sin_family, ip_address, &address.sin_addr.s_addr) != 1) {
+  	errorMessage("Can't parse IP address or system error occurred\n");
   }
 
-  // store local address or IP address and storee it in my server
-  server = gethostbyname(argv[1]);
-
-  if (server == NULL) {
-    fprintf(stderr, "Error, No such host\n");
-    exit(0);
+  // Create a socket using TCP
+ 	int descriptor;
+  if ((descriptor = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+    errorMessage("Can't create socket\n");
   }
 
-  // clear my resources used from my sockets always to be safe
-  bzero((char*) &server_addr, sizeof(server_addr));
-
-  // init my server
-  server_addr.sin_family = AF_INET;
-
-  // copying the value of my server address intp my server hostname
-  bcopy((char *) server->h_addr, (char *) &server_addr.sin_addr.s_addr, server->h_length);
-
-  // usual convert my port number to a network port number using htons
-  server_addr.sin_port = htons(portNo);
-
-  if(connect(checkSocketConnectionSuccessful, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
-    errorMessage("There was an error Connectiong\n");
+  // Initiate a connection on the socket
+  if (connect(descriptor, (struct sockaddr *) &address, sizeof(address)) < 0) {
+    errorMessage("Can't initiate connection on socket\n");
   }
 
-  printf("\n================================================================================\n");
-  printf("Successfully connected to the server on port %d you can send your messages now:\n", portNo);
-  printf("================================================================================\n\n");
+  printf("Initiated connection to %s at port %d.\n\n", ip_address, port_number);
 
-  sendMessageToServer(checkSocketConnectionSuccessful, buffer);
-  receiveMessageFromServer(checkSocketConnectionSuccessful, buffer);
+	char buffer[MAX_BUFF_LEN];
+  sendMessageToServer(descriptor, buffer);
+  receiveMessageFromServer(descriptor, buffer);
 
   return 0;
 }
