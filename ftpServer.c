@@ -33,34 +33,20 @@ int main(int argc, char *argv[]) {
 }
 
 int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-
-  int n;
-
-  n = read(clientSock, buff, MAX_BUFF_LEN);
-
-  if(n < 0) {
+  if (read(clientSock, buff, MAX_BUFF_LEN) < 0) {
     printErrorMsg("Error reading from the client socket");
     return -1;
-  }
-
-  else {
+  } else {
     printf("Message received From the client: %s\n", (char *)buff);
     return 0;
   }
-
 }
 
 int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-
-  int n;
-
   char *message = "I got your message";
-  n = write(clientSock, message, strlen(message));
-
-  if(n < 0) {
+  if (write(clientSock, message, strlen(message)) < 0) {
     printErrorMsg("Error writing to the client socket");
     return -1;
   }
-
   return 0;
 }

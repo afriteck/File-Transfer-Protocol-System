@@ -25,16 +25,11 @@ int main(int argc, char *argv[]) {
 }
 
 int sendMessageToServer(int serverSock, char* buff) {
-  int n;
-
   printf("Enter a message to send to the server: ");
-  // clear my buffer
   bzero(buff, MAX_BUFF_LEN);
   fgets(buff, MAX_BUFF_LEN, stdin);
 
-  n = write(serverSock, buff, strlen(buff));
-
-  if (n < 0) {
+  if (write(serverSock, buff, strlen(buff)) < 0) {
     printErrorMsg("Error writing to the client socket");
     return -1;
   }
@@ -43,15 +38,9 @@ int sendMessageToServer(int serverSock, char* buff) {
 }
 
 int receiveMessageFromServer(int serverSock, char* buff) {
-  int n;
-
-  // first clear my buffer off any shit
   bzero(buff, MAX_BUFF_LEN);
 
-  // read from the server sock
-  n = read(serverSock, buff, MAX_BUFF_LEN);
-
-  if (n < 0) {
+  if (read(serverSock, buff, MAX_BUFF_LEN) < 0) {
     printErrorMsg("Error reading from the socket");
     return -1;
   }
