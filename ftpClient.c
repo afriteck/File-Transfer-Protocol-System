@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
   portNo = atoi(argv[2]);
 
   // Create a socket
-  checkSocketConnectionSuccessful = socket(AF_INET, SOCK_STREAM, 0);
+  checkSocketConnectionSuccessful = socket(PF_INET, SOCK_STREAM, 0);
 
   if (checkSocketConnectionSuccessful < 0) {
     errorMessage("Error cannot create a socket");
