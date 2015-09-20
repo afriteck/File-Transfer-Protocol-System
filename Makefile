@@ -3,8 +3,8 @@ CXX_FLAGS = -Wextra -Werror -pedantic-errors
 
 all: ftpClient ftpServer
 
-ftpServer: utilities.o ftpServer.o
-	$(CXX) $(CXX_FLAGS) -o ./ftpServer utilities.o ftpServer.o
+ftpServer: utilities.o ftpServer.o networking.o
+	$(CXX) $(CXX_FLAGS) -o ./ftpServer networking.o utilities.o ftpServer.o
 
 ftpServer.o: ftpServer.c ftpDefs.h
 
@@ -13,7 +13,9 @@ ftpClient: utilities.o ftpClient.o
 
 ftpClient.o: ftpClient.c ftpDefs.h
 
-utilities.o: utilities.c ftpDefs.h
+networking.o: networking.c
+
+utilities.o: utilities.c
 	$(CXX) $(CXX_FLAGS) -c utilities.c
 
 clean:

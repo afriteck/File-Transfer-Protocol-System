@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
   sendMessageToServer(descriptor, buffer);
   receiveMessageFromServer(descriptor, buffer);
 
+  // TODO: close socket
   return 0;
 }
 
