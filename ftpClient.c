@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
   char *ip_address = argv[1];
   int port_number = atoi(argv[2]), descriptor = -1;
   connectToServer(ip_address, port_number, &descriptor);
-  printf("Initiated connection to %s at port %d.\n\n", ip_address, port_number);
+  printf("Initiated connection to %s at port %d.\n", ip_address, port_number);
 
   char buffer[MAX_BUFF_LEN];
   while (1) {
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 }
 
 int sendMessageToServer(int serverSock, char* buff) {
-  printf("Enter a message to send to the server: ");
+  printf("> ");
   bzero(buff, MAX_BUFF_LEN);
   fgets(buff, MAX_BUFF_LEN, stdin);
 
