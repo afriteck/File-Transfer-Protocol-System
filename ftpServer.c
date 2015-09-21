@@ -24,6 +24,8 @@ int main(int argc, char *argv[]) {
   while (1) {
     bzero(buffer, MAX_BUFF_LEN);
     readMessageFromClient(accept_socket, &buffer);
+    trimString(buffer);
+    handleRequest(buffer);
     writeMessageToClient(accept_socket, &buffer);
   }
 
@@ -32,20 +34,12 @@ int main(int argc, char *argv[]) {
 }
 
 int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-  if (read(clientSock, buff, MAX_BUFF_LEN) < 0) {
-    printErrorMsg("Error reading from the client socket");
-    return -1;
-  } else {
-    printf("Message received From the client: %s\n", (char *)buff);
-    return 0;
-  }
+  readFromSocket(&clientSock, (char **)&buff);
+  printf("Message received: %s\n", (char *)buff);
+  return 0;
 }
 
 int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-  char *message = "I got your message";
-  if (write(clientSock, message, strlen(message)) < 0) {
-    printErrorMsg("Error writing to the client socket");
-    return -1;
-  }
+  writeToSocket(&clientSock, (char **)&buff);
   return 0;
 }

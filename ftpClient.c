@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
 
   char buffer[MAX_BUFF_LEN];
   while (1) {
+    bzero(buffer, MAX_BUFF_LEN);
     sendMessageToServer(descriptor, buffer);
     receiveMessageFromServer(descriptor, buffer);
   }
@@ -28,25 +29,13 @@ int main(int argc, char *argv[]) {
 
 int sendMessageToServer(int serverSock, char* buff) {
   printf("> ");
-  bzero(buff, MAX_BUFF_LEN);
   fgets(buff, MAX_BUFF_LEN, stdin);
-
-  if (write(serverSock, buff, strlen(buff)) < 0) {
-    printErrorMsg("Error writing to the client socket");
-    return -1;
-  }
-
+  writeToSocket(&serverSock, &buff);
   return 0;
 }
 
 int receiveMessageFromServer(int serverSock, char* buff) {
-  bzero(buff, MAX_BUFF_LEN);
-
-  if (read(serverSock, buff, MAX_BUFF_LEN) < 0) {
-    printErrorMsg("Error reading from the socket");
-    return -1;
-  }
-
+  readFromSocket(&serverSock, &buff);
   printf("%s\n", buff);
   return 0;
 }

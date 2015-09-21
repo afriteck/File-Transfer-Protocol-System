@@ -1,6 +1,7 @@
 #include <strings.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include "ftpDefs.h"
 
 void createServerAddrStruct(struct sockaddr_in *address, int port) {
@@ -55,5 +56,18 @@ void connectToServer(char *ip_address, int port, int *descriptor) {
   createSocket(descriptor);
   if (connect(*descriptor, (struct sockaddr *) &address, sizeof(address)) < 0) {
     printErrorMsg("Can't initiate connection on socket\n");
+  }
+}
+
+void readFromSocket(int *descriptor, char **buffer) {
+  bzero(*buffer, MAX_BUFF_LEN);
+  if (read(*descriptor, *buffer, MAX_BUFF_LEN) < 0) {
+    printErrorMsg("Can't read from socket");
+  }
+}
+
+void writeToSocket(int *descriptor, char **buffer) {
+  if (write(*descriptor, *buffer, strlen(*buffer)) < 0) {
+    printErrorMsg("Can't write to socket");
   }
 }
