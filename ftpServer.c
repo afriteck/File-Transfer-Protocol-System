@@ -49,7 +49,7 @@ int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
 }
 
 int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-  
+
   int n;
 
   n = write(clientSock, buff, strlen(*buff));
@@ -66,7 +66,7 @@ int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
 void handleAllRequests(int newSocketForClient, char* buffer) {
   if((strcmp(buffer, "ls")) == 0) {
 
-    char* newline = "\n";
+    char newline[MAX_BUFF_LEN] = "\n";
 
     DIR* d = opendir("./");
     if (d == NULL) exit(1);
@@ -74,7 +74,7 @@ void handleAllRequests(int newSocketForClient, char* buffer) {
     for(struct dirent *de = NULL; (de = readdir(d)) != NULL; ) {
 
       writeMessageToClient(newSocketForClient, &de->d_name);
-      writeMessageToClient(newSocketForClient, newline);
+      writeMessageToClient(newSocketForClient, &newline);
     }
 
     closedir(d);
