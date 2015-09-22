@@ -3,7 +3,7 @@
 
 // Networking - Client
 int sendMessageToServer(int serverSock, char *buff);
-int receiveMessageFromServer(int serverSock, char*buff);
+int receiveMessageFromServer(int serverSock, char*buff, size_t len);
 
 // Networking - Server
 int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
@@ -13,12 +13,11 @@ int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
 void setupListenSocket(int port, int *listen_socket);
 void acceptIncomingConnection(int *listen_socket, int *accept_socket);
 void connectToServer(char *ip_address, int port, int *descriptor);
-void readFromSocket(int *descriptor, char **buffer);
-void writeToSocket(int *descriptor, char **buffer);
 
 // Utilities
 void printErrorMsg(char *msg);
 
 // Request Handler
-void handleRequest(char *request);
+void handleAllRequests(int newSocketForClient, char* buffer);
 void trimString(char *string);
+void addNewLineCharacterToString(char* string);

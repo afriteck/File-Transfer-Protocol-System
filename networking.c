@@ -59,15 +59,3 @@ void connectToServer(char *ip_address, int port, int *descriptor) {
   }
 }
 
-void readFromSocket(int *descriptor, char **buffer) {
-  bzero(*buffer, MAX_BUFF_LEN);
-  if (read(*descriptor, *buffer, MAX_BUFF_LEN) < 0) {
-    printErrorMsg("Can't read from socket");
-  }
-}
-
-void writeToSocket(int *descriptor, char **buffer) {
-  if (write(*descriptor, *buffer, strlen(*buffer)) < 0) {
-    printErrorMsg("Can't write to socket");
-  }
-}

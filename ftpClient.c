@@ -20,22 +20,53 @@ int main(int argc, char *argv[]) {
   while (1) {
     bzero(buffer, MAX_BUFF_LEN);
     sendMessageToServer(descriptor, buffer);
-    receiveMessageFromServer(descriptor, buffer);
+    receiveMessageFromServer(descriptor, buffer,  MAX_BUFF_LEN - 1);
   }
 
   // TODO: close socket
   return 0;
 }
 
+
 int sendMessageToServer(int serverSock, char* buff) {
-  printf("> ");
+
+  int n;
+
+  printf("Enter a message to send to the server: ");
+  
+  // clear my buffer
+  bzero(buff, MAX_BUFF_LEN);
   fgets(buff, MAX_BUFF_LEN, stdin);
-  writeToSocket(&serverSock, &buff);
+
+  n = write(serverSock, buff, strlen(buff));
+
+  if(n < 0) {
+
+    printErrorMsg("Error writing to the client socket");
+    return -1;
+  }
+
   return 0;
 }
 
-int receiveMessageFromServer(int serverSock, char* buff) {
-  readFromSocket(&serverSock, &buff);
+
+
+int receiveMessageFromServer(int serverSock, char* buff, size_t len) {
+
+  int n;
+
+  // first clear my buffer off any shit
+  bzero(buff, MAX_BUFF_LEN);
+
+  // read from the server sock
+  n = read(serverSock, buff, len);
+
+  if(n < 0) {
+
+    printErrorMsg("Error reading from the socket");
+    return -1;
+  }
+
   printf("%s\n", buff);
   return 0;
 }
