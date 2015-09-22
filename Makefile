@@ -22,4 +22,4 @@ utilities.o: utilities.c
 	$(CXX) $(CXX_FLAGS) -c -o utilities.o utilities.c
 
 clean:
-	rm *.o ftpClient ftpServer
+	rm -f *.o ftpClient ftpServer
