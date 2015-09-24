@@ -1,128 +1,120 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "ftpDefs.h"
+#include "dirent.h"
 
-void errorMessage(char *msg) {
+int main(int argc, char *argv[]) {
 
-	perror(msg);
-	exit(1);
+	// Do not continue unless all arguments have been provided
+  	if (argc < 2) {
+    		fprintf(stderr, "usage: %s <port>\n", argv[0]);
+    		exit(1);
+  	}
+
+  	int port_number = atoi(argv[1]), listen_socket = -1;
+  	setupListenSocket(port_number, &listen_socket);
+  	printf("Accepting connections on port %d.\n", port_number);
+  	fflush(stdout);
+
+  	int accept_socket = -1;
+  	acceptIncomingConnection(&listen_socket, &accept_socket);
+
+  	char buffer[MAX_BUFF_LEN];
+
+  	while (1) {
+
+    		bzero(buffer, MAX_BUFF_LEN);
+    		readMessageFromClient(accept_socket, buffer);
+    		trimString(buffer);
+    		handleAllRequests(accept_socket ,buffer);
+  	}
+
+
+  	// TODO: close sockets
+  	return 0;
+}
+
+int readMessageFromClient(int clientSock, char *buff) {
+
+  	int n;
+  	n = read(clientSock, buff, MAX_BUFF_LEN);
+
+  	if(n < 0) {
+    		printErrorMsg("Error reading from the client socket");
+    		return -1;
+  	}
+
+  	else {
+    		printf("Message received From the client: %s\n", buff);
+    		return 0;
+  	}
+}
+
+int writeMessageToClient(int clientSock, char *buff) {
+  
+  	int n;
+
+  	n = write(clientSock, buff, strlen(buff));
+
+  	if(n < 0) {
+    		printErrorMsg("Error writing to the client socket");
+    		return -1;
+  	}
+
+ 	return 0;
 
 }
 
-int main(int argc, char* argv[]) {
+void handleAllRequests(int newSocketForClient, char* buffer) {
 
-	int	checkSocketConnectionSuccessful, portNo, newSocketForClient;
-	socklen_t clientLen;
-	char 	buffer[MAX_BUFF_LEN];
-	struct 	sockaddr_in server_addr, client_addr;
+  	char* trimBuff = trimStringAfter(buffer);
 
-
-	/* Do a basic error check if the command line argument is not complete throw an error am using
-         * exit(1) to flag an error which is un successful termination */
-	if (argc < 2) {
-
-                fprintf(stderr,"ERROR, no port was specified in your command line argument\n");
-                exit(1);
-
-        }
+  	char* mergeStringForMakeDirectory = concat("mkdir ", trimBuff);
+	char* mergeStringForChngDirectory = concat("cd ", trimBuff);
 
 
-	// Create a socket and check if it was successful or not
-	checkSocketConnectionSuccessful = createSocket();
+  	if((strcmp(buffer, "ls")) == 0) {
 
-	if(checkSocketConnectionSuccessful < 0) {
-		errorMessage("Error opening socket");
+    		char* newline = "\n";
+
+    		DIR* d = opendir("./");
+    		if (d == NULL) exit(1);
+
+    			for(struct dirent *de = NULL; (de = readdir(d)) != NULL; ) {
+
+      				writeMessageToClient(newSocketForClient, de->d_name);
+      				writeMessageToClient(newSocketForClient, newline);
+    			}
+
+    			closedir(d);
+
+  	}
+
+  	else if ((strcmp(buffer, mergeStringForMakeDirectory)) == 0) {
+
+    		mkdir(trimBuff, 0755);
+    		writeMessageToClient(newSocketForClient, "Created directory as requested\n");
+
+  	}
+
+	else if ((strcmp(buffer, mergeStringForChngDirectory)) == 0) {
+	
+		chdir(trimBuff);
+		writeMessageToClient(newSocketForClient, "I just changed your directory as requested\n");
 	}
 
-	/* Before I use my server address I will like to clear and
-	 * release it of anything that was using it previously so I
-	 * can use it from a fresh and free of all junks LOL */
-	bzero((char*) &server_addr, sizeof(server_addr));
+  	else {
 
+    		writeMessageToClient(newSocketForClient, buffer);
+  	}
 
-	// Now I want to store my port no which I will retrieve from my command line argument
-	portNo = atoi(argv[1]);
-
-	// Initialize my server address
-	server_addr.sin_family 		= AF_INET;
-	server_addr.sin_addr.s_addr 	= INADDR_ANY;
-	server_addr.sin_port 		= htons(portNo);
-
-	// Bind my socket
-	if(bind(checkSocketConnectionSuccessful, (struct sockaddr *) &server_addr,sizeof(server_addr)) < 0)	{
-		errorMessage("Error Binding the IP address, try again! ");
-	}
-
-	// Listen for connection, the number 10 is the maximum no. of clients the server should allow
-	listen(checkSocketConnectionSuccessful, 10);
-
-	clientLen = sizeof(client_addr);
-
-
-	// Accept connection when client sends a request
-
-	do {
-		newSocketForClient = accept(checkSocketConnectionSuccessful, (struct sockaddr *) &client_addr, &clientLen);
-
-		if(newSocketForClient < 0) {
-
-			errorMessage("Error accepting connection\n");
-		}
-
-	// Just to make sure my buffer is all clear and set to use I will clear it again just to be safe
-		bzero(buffer, 256);
-
-	// read message received from client
-		readMessageFromClient(newSocketForClient, &buffer);
-
-	// send message to client
-		writeMessageToClient(newSocketForClient, &buffer);
-	} while (1);
-
-	return 0;
-}
-
-
-
-int createSocket() {
-	return socket(AF_INET, SOCK_STREAM, 0);
-}
-
-
-int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-
-	int n;
-
-	n = read(clientSock, buff, MAX_BUFF_LEN);
-
-	if(n < 0) {
-		errorMessage("Error reading from the client socket");
-		return -1;
-	}
-
-	else {
-		printf("Message received From the client: %s\n", (char *)buff);
-		return 0;
-	}
+  	free(mergeStringForMakeDirectory);
+	free(mergeStringForChngDirectory);
 
 }
 
-int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-
-	int n;
-
-	char *message = "I got your message";
-	n = write(clientSock, message, sizeof(message));
-
-	if(n < 0) {
-		errorMessage("Error writing to the client socket");
-		return -1;
-	}
-
-	return 0;
-}
