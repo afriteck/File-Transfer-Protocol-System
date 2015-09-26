@@ -4,11 +4,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "ftpDefs.h"
+#include <stdio.h>
 
 #define NETWORKING_DEBUG 0
-#if NETWORKING_DEBUG
-#include <stdio.h>
-#endif
 
 void createServerAddrStruct(struct sockaddr_in *address, int port) {
   bzero(address, sizeof(*address));
@@ -110,5 +108,27 @@ int receiveMessage(char *buff, int descriptor) {
   #endif
 
   return numBytesRcvd;
+}
+
+void receiveFile(FILE *file, char *buff, int descriptor) {
+  bzero(buff, MAX_BUFF_LEN);
+  int numBytesRcvd = 0;
+  while (1) {
+    int result = read(descriptor, buff, MAX_BUFF_LEN);
+    if (result < 0) {
+      printErrorMsg("read() failed\n");
+    } else if (result == 0) {
+      break;
+    }
+
+    numBytesRcvd += result;
+    int bytesWritten = fwrite(buff, 1, numBytesRcvd, file);
+    if (strchr(buff, '\0') != NULL) {
+      break;
+    }
+  }
+  if (numBytesRcvd < 0) {
+    printErrorMsg("read() failed");
+  }
 }
 

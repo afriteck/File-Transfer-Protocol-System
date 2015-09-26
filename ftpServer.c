@@ -22,6 +22,32 @@ void ls(char **output) {
   closedir(directory);
 }
 
+void get(char *filename, char **output) {
+  FILE* file = fopen(concat("./", filename), "rb");
+  if (file == NULL) {
+    printErrorMsg("open() failed");
+  }
+
+  while (1) {
+    int bytesRead = fread(*output, 1, MAX_BUFF_LEN, file);
+    if (bytesRead < 0) {
+      printErrorMsg("fread() failed");
+    }
+    if (bytesRead < MAX_BUFF_LEN) {
+      if (ferror(file)) {
+        printErrorMsg("something bad happened.");
+      }
+      if (feof(file)) {
+        break;
+      }
+    } else {
+      // TODO!!
+    }
+    fclose(file);
+  }
+
+}
+
 int makeDirectory(char *name, char **output) {
   int result = mkdir(name, 0777);
   if (result == 0) {
@@ -38,12 +64,16 @@ void processRequest(char *request, char **reply) {
   char* trimBuff = trimStringAfter(request);
   char* mergeStringForMakeDirectory = concat("mkdir ", trimBuff);
   char* mergeStringForChngDirectory = concat("cd ", trimBuff);
+  char* mergeStringForGet           = concat("get ", trimBuff);
 
   if ((strcmp(request, "ls")) == 0) {
     ls(reply);
   }
   else if ((strcmp(request, mergeStringForMakeDirectory)) == 0) {
     makeDirectory(trimBuff, reply);
+  }
+  else if ((strcmp(request, mergeStringForGet)) == 0) {
+    get(trimBuff, reply);
   }
   else {
     sprintf(*reply, "%s: command not found\n", request);

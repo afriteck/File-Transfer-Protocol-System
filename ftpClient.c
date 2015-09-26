@@ -28,8 +28,17 @@ int main(int argc, char *argv[]) {
     char buff[MAX_BUFF_LEN];
     getUserInput(buff);
     sendMessage(buff, descriptor);
-    receiveMessage(buff, descriptor);
-    printf("%s", buff);
+
+    if (startsWith(buff, "ls") > 0 || startsWith(buff, "mkdir") > 0 || startsWith(buff, "cd") > 0) {
+      receiveMessage(buff, descriptor);
+      printf("%s", buff);
+    }
+    else if (startsWith(buff, "get") > 0) {
+      FILE *file = fopen(trimStringAfter(buff), "ab");
+      receiveFile(file, buff, descriptor);
+      fclose(file);
+      printf("File downloaded!\n");
+    }
   }
 
   printf("\n");
