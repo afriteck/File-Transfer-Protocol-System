@@ -122,8 +122,14 @@ void receiveFile(FILE *file, char *buff, int descriptor) {
     }
 
     numBytesRcvd += result;
+
+    int hasNullTerminator = strchr(buff, '\0') != NULL;
+    if (hasNullTerminator) {
+      --numBytesRcvd;
+    }
+
     int bytesWritten = fwrite(buff, 1, numBytesRcvd, file);
-    if (strchr(buff, '\0') != NULL) {
+    if (hasNullTerminator) {
       break;
     }
   }
