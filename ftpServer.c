@@ -3,7 +3,31 @@
 #include <string.h>
 #include <unistd.h>
 #include "ftpDefs.h"
-#include "dirent.h"
+
+void executeCommand(char *command, char **output) {
+  FILE *file = popen(command, "r");
+  if (file == NULL) {
+    printErrorMsg("popen() failed\n");
+  }
+
+  int bytesRead = 0;
+  char nextChar;
+  while (bytesRead < MAX_BUFF_LEN - 1 && (nextChar = fgetc(file)) != EOF) {
+    (*output)[bytesRead] = nextChar;
+    ++bytesRead;
+  }
+
+  pclose(file);
+}
+
+void processRequest(char *request, char **reply) {
+  bzero(*reply, MAX_BUFF_LEN);
+  if (strcmp(request, "ls") == 0) {
+    executeCommand("ls", reply);
+  } else {
+    sprintf(*reply, "%s: command not found\n", request);
+  }
+}
 
 int main(int argc, char *argv[]) {
   // Do not continue unless all arguments have been provided
@@ -20,69 +44,19 @@ int main(int argc, char *argv[]) {
   int accept_socket = -1;
   acceptIncomingConnection(&listen_socket, &accept_socket);
 
-  char buffer[MAX_BUFF_LEN];
   while (1) {
-    bzero(buffer, MAX_BUFF_LEN);
-    readMessageFromClient(accept_socket, &buffer);
-    trimString(buffer);
-    handleAllRequests(accept_socket ,buffer);
+    char buffer[MAX_BUFF_LEN];
+    receiveMessage(buffer, accept_socket);
+
+    char *reply = malloc(MAX_BUFF_LEN);
+    processRequest(buffer, &reply);
+    sendMessage(reply, accept_socket);
+    free(reply);
   }
 
-  // TODO: close sockets
+  close(accept_socket);
+  close(listen_socket);
+
   return 0;
 }
 
-int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-
-  int n;
-  n = read(clientSock, buff, MAX_BUFF_LEN);
-
-  if(n < 0) {
-    printErrorMsg("Error reading from the client socket");
-    return -1;
-  }
-
-  else {
-    printf("Message received From the client: %s\n", *buff);
-    return 0;
-  }
-}
-
-int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-
-  int n;
-
-  n = write(clientSock, buff, strlen(*buff));
-
-  if(n < 0) {
-    printErrorMsg("Error writing to the client socket");
-    return -1;
-  }
-
-  return 0;
-
-}
-
-void handleAllRequests(int newSocketForClient, char* buffer) {
-  if((strcmp(buffer, "ls")) == 0) {
-
-    char newline[MAX_BUFF_LEN] = "\n";
-
-    DIR* d = opendir("./");
-    if (d == NULL) exit(1);
-
-    for(struct dirent *de = NULL; (de = readdir(d)) != NULL; ) {
-
-      writeMessageToClient(newSocketForClient, &de->d_name);
-      writeMessageToClient(newSocketForClient, &newline);
-    }
-
-    closedir(d);
-
-  }
-
-  else if ((strcmp(buffer, "mkdir")) == 0) {
-
-  }
-
-}

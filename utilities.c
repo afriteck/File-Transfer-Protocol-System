@@ -10,6 +10,6 @@ void printErrorMsg(char *msg) {
 void trimString(char *string) {
   size_t pos = strlen(string) - 1;
   if (string[pos] == '\n') {
-    string[pos] = '\0' ;
+    string[pos] = '\0';
   }
 }
