@@ -1,12 +1,18 @@
 #define MAX_BUFF_LEN 1024
+#define MAX_PENDING_CONNECTIONS 10
 
-// Client
-int sendMessageToServer(int serverSock, char* buff);
-int receiveMessageFromServer(int serverSock, char* buff);
+// Networking
+int sendMessage(char *buff, int descriptor);
+int receiveMessage(char *buff, int descriptor);
+void setupListenSocket(int port, int *listen_socket);
+void acceptIncomingConnection(int *listen_socket, int *accept_socket);
+void connectToServer(char *ip_address, int port, int *descriptor);
 
-// Server
-int createSocket();
-int readMessage(int, char*);
-int writeMessage(int, char*);
-int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
-int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]);
+// Utilities
+void printErrorMsg(char *msg);
+void split(char *input, char *delimiter, char ***output, int *numTokens);
+
+// Request Handler
+void handleAllRequests(int newSocketForClient, char* buffer);
+void trimString(char *string);
+void addNewLineCharacterToString(char* string);

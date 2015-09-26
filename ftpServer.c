@@ -1,128 +1,84 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include "ftpDefs.h"
 
-void errorMessage(char *msg) {
+void executeCommand(char *command, char **output) {
+  FILE *file = popen(command, "r");
+  if (file == NULL) {
+    printErrorMsg("popen() failed\n");
+  }
 
-	perror(msg);
-	exit(1);
+  int bytesRead = 0;
+  char nextChar;
+  while (bytesRead < MAX_BUFF_LEN - 1 && (nextChar = fgetc(file)) != EOF) {
+    if (output != NULL) {
+      (*output)[bytesRead] = nextChar;
+    }
+    ++bytesRead;
+  }
 
+  pclose(file);
 }
 
-int main(int argc, char* argv[]) {
-
-	int	checkSocketConnectionSuccessful, portNo, newSocketForClient;
-	socklen_t clientLen;
-	char 	buffer[MAX_BUFF_LEN];
-	struct 	sockaddr_in server_addr, client_addr;
-
-
-	/* Do a basic error check if the command line argument is not complete throw an error am using
-         * exit(1) to flag an error which is un successful termination */
-	if (argc < 2) {
-
-                fprintf(stderr,"ERROR, no port was specified in your command line argument\n");
-                exit(1);
-
-        }
-
-
-	// Create a socket and check if it was successful or not
-	checkSocketConnectionSuccessful = createSocket();
-
-	if(checkSocketConnectionSuccessful < 0) {
-		errorMessage("Error opening socket");
-	}
-
-	/* Before I use my server address I will like to clear and
-	 * release it of anything that was using it previously so I
-	 * can use it from a fresh and free of all junks LOL */
-	bzero((char*) &server_addr, sizeof(server_addr));
-
-
-	// Now I want to store my port no which I will retrieve from my command line argument
-	portNo = atoi(argv[1]);
-
-	// Initialize my server address
-	server_addr.sin_family 		= AF_INET;
-	server_addr.sin_addr.s_addr 	= INADDR_ANY;
-	server_addr.sin_port 		= htons(portNo);
-
-	// Bind my socket
-	if(bind(checkSocketConnectionSuccessful, (struct sockaddr *) &server_addr,sizeof(server_addr)) < 0)	{
-		errorMessage("Error Binding the IP address, try again! ");
-	}
-
-	// Listen for connection, the number 10 is the maximum no. of clients the server should allow
-	listen(checkSocketConnectionSuccessful, 10);
-
-	clientLen = sizeof(client_addr);
-
-
-	// Accept connection when client sends a request
-
-	do {
-		newSocketForClient = accept(checkSocketConnectionSuccessful, (struct sockaddr *) &client_addr, &clientLen);
-
-		if(newSocketForClient < 0) {
-
-			errorMessage("Error accepting connection\n");
-		}
-
-	// Just to make sure my buffer is all clear and set to use I will clear it again just to be safe
-		bzero(buffer, 256);
-
-	// read message received from client
-		readMessageFromClient(newSocketForClient, &buffer);
-
-	// send message to client
-		writeMessageToClient(newSocketForClient, &buffer);
-	} while (1);
-
-	return 0;
+int makeDirectory(char *name, char **output) {
+  int result = mkdir(name, 0777);
+  if (result == 0) {
+    sprintf(*output, "Directory `%s` created.\n", name);
+  } else {
+    sprintf(*output, "Failed to created directory `%s`.\n", name);
+  }
+  return result;
 }
 
+void processRequest(char *request, char **reply) {
+  bzero(*reply, MAX_BUFF_LEN);
 
+  char **tokens = NULL;
+  int numTokens = -1;
+  split(request, " ", &tokens, &numTokens);
 
-int createSocket() {
-	return socket(AF_INET, SOCK_STREAM, 0);
+  if (numTokens >= 1 && strcmp(tokens[0], "ls") == 0) {
+    executeCommand("ls", reply);
+  } else if (numTokens >= 2 && strcmp(tokens[0], "mkdir") == 0) {
+    makeDirectory(tokens[1], reply);
+  } else {
+    sprintf(*reply, "%s: command not found\n", request);
+  }
+
+  free(tokens);
 }
 
+int main(int argc, char *argv[]) {
+  // Do not continue unless all arguments have been provided
+  if (argc < 2) {
+    fprintf(stderr, "usage: %s <port>\n", argv[0]);
+    exit(1);
+  }
 
-int readMessageFromClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
+  int port_number = atoi(argv[1]), listen_socket = -1;
+  setupListenSocket(port_number, &listen_socket);
+  printf("Accepting connections on port %d.\n", port_number);
+  fflush(stdout);
 
-	int n;
+  int accept_socket = -1;
+  acceptIncomingConnection(&listen_socket, &accept_socket);
 
-	n = read(clientSock, buff, MAX_BUFF_LEN);
+  while (1) {
+    char buffer[MAX_BUFF_LEN];
+    receiveMessage(buffer, accept_socket);
 
-	if(n < 0) {
-		errorMessage("Error reading from the client socket");
-		return -1;
-	}
+    char *reply = malloc(MAX_BUFF_LEN);
+    processRequest(buffer, &reply);
+    sendMessage(reply, accept_socket);
+    free(reply);
+  }
 
-	else {
-		printf("Message received From the client: %s\n", (char *)buff);
-		return 0;
-	}
+  close(accept_socket);
+  close(listen_socket);
 
+  return 0;
 }
 
-int writeMessageToClient(int clientSock, char (*buff)[MAX_BUFF_LEN]) {
-
-	int n;
-
-	char *message = "I got your message";
-	n = write(clientSock, message, sizeof(message));
-
-	if(n < 0) {
-		errorMessage("Error writing to the client socket");
-		return -1;
-	}
-
-	return 0;
-}
