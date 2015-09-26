@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *mystrdup(const char *s);
+
 void printErrorMsg(char *msg) {
   perror(msg);
   exit(1);
@@ -14,26 +16,33 @@ void trimString(char *string) {
   }
 }
 
-// Split input into tokens (e.g., "mkdir pictures" => ["mkdir", "pictures"])
-void split(char *input, char *delimiter, char ***output, int *numTokens)
-{
-  char *request = strdup(input);
-  char *token = strtok(request, delimiter);
-  int numSpaces = 0, i = 0;
+char* trimStringAfter(char* string) {
 
-  while (token) {
-    *output = realloc(*output, sizeof(char *) * ++numSpaces);
-    if (*output == NULL) {
-      printErrorMsg("realloc() failed");
-    }
-    (*output)[numSpaces - 1] = token;
-    token = strtok(NULL, " ");
+  char* starting = string;
+
+  while (*starting != ' ') {
+    starting++;
   }
 
-  *output = realloc(*output, sizeof(char *) * (numSpaces + 1));
-  (*output)[numSpaces] = 0;
+    // first one _after_
+  starting++;
+  return starting;
+}
 
-  *numTokens = numSpaces + 1;
 
-  free(request);
+char* concat(char *s1, char *s2) {
+
+  size_t len1 = strlen(s1);
+  size_t len2 = strlen(s2);
+
+  // +1 for the zero-terminator
+  char *result = malloc(len1 + len2 + 1);
+  if (result == NULL) {
+    printErrorMsg("malloc() failed in concat");
+  }
+
+  //check for errors in malloc here later...
+  memcpy(result, s1, len1);
+  memcpy(result + len1, s2, len2 + 1);//+1 to copy the null-terminator
+  return result;
 }
