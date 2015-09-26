@@ -1,5 +1,5 @@
 CXX = gcc
-CXX_FLAGS = -Wextra -Werror -pedantic-errors -std=c99
+CXX_FLAGS = -Wextra -std=c99
 
 all: ftpClient ftpServer
 

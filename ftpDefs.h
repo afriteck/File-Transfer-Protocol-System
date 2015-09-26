@@ -10,7 +10,8 @@ void connectToServer(char *ip_address, int port, int *descriptor);
 
 // Utilities
 void printErrorMsg(char *msg);
-void split(char *input, char *delimiter, char ***output, int *numTokens);
+char* trimStringAfter(char *string);
+char* concat(char *s1, char *s2);
 
 // Request Handler
 void handleAllRequests(int newSocketForClient, char* buffer);

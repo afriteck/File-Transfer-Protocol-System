@@ -1,26 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include "ftpDefs.h"
 
-void executeCommand(char *command, char **output) {
-  FILE *file = popen(command, "r");
-  if (file == NULL) {
-    printErrorMsg("popen() failed\n");
+void ls(char **output) {
+  DIR* directory = opendir("./");
+  if (directory == NULL) {
+    printErrorMsg("opendir() failed");
   }
 
-  int bytesRead = 0;
-  char nextChar;
-  while (bytesRead < MAX_BUFF_LEN - 1 && (nextChar = fgetc(file)) != EOF) {
-    if (output != NULL) {
-      (*output)[bytesRead] = nextChar;
-    }
-    ++bytesRead;
+  struct dirent *entry = NULL;
+  while ((entry = readdir(directory)) != NULL) {
+    strcat(*output, entry->d_name);
+    strcat(*output, "\n");
   }
 
-  pclose(file);
+  closedir(directory);
 }
 
 int makeDirectory(char *name, char **output) {
@@ -36,19 +35,22 @@ int makeDirectory(char *name, char **output) {
 void processRequest(char *request, char **reply) {
   bzero(*reply, MAX_BUFF_LEN);
 
-  char **tokens = NULL;
-  int numTokens = -1;
-  split(request, " ", &tokens, &numTokens);
+  char* trimBuff = trimStringAfter(request);
+  char* mergeStringForMakeDirectory = concat("mkdir ", trimBuff);
+  char* mergeStringForChngDirectory = concat("cd ", trimBuff);
 
-  if (numTokens >= 1 && strcmp(tokens[0], "ls") == 0) {
-    executeCommand("ls", reply);
-  } else if (numTokens >= 2 && strcmp(tokens[0], "mkdir") == 0) {
-    makeDirectory(tokens[1], reply);
-  } else {
+  if ((strcmp(request, "ls")) == 0) {
+    ls(reply);
+  }
+  else if ((strcmp(request, mergeStringForMakeDirectory)) == 0) {
+    makeDirectory(trimBuff, reply);
+  }
+  else {
     sprintf(*reply, "%s: command not found\n", request);
   }
 
-  free(tokens);
+  free(mergeStringForMakeDirectory);
+  free(mergeStringForChngDirectory);
 }
 
 int main(int argc, char *argv[]) {
