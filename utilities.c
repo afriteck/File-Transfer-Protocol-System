@@ -46,3 +46,10 @@ char* concat(char *s1, char *s2) {
   memcpy(result + len1, s2, len2 + 1);//+1 to copy the null-terminator
   return result;
 }
+
+int startsWith(char *a, char *b) {
+  if (strncmp(a, b, strlen(b)) == 0) {
+    return 1;
+  }
+  return -1;
+}

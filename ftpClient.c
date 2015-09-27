@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include "ftpDefs.h"
 
 void getUserInput(char *buff) {
@@ -28,8 +29,14 @@ int main(int argc, char *argv[]) {
     char buff[MAX_BUFF_LEN];
     getUserInput(buff);
     sendMessage(buff, descriptor);
-    receiveMessage(buff, descriptor);
-    printf("%s", buff);
+
+    if (startsWith(buff, "get") > 0) {
+      receiveFile(buff, descriptor, "download.png");
+    }
+    else {
+      receiveMessage(buff, descriptor);
+      printf("%s", buff);
+    }
   }
 
   printf("\n");
