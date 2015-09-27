@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "ftpDefs.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #define NETWORKING_DEBUG 0
 
@@ -69,9 +70,9 @@ int sendMessage(char *buff, int descriptor) {
   }
 
   int numBytes = strlen(buff) + 1; // strlen() + null terminator
-  if (numBytes > MAX_BUFF_LEN) {
-    printErrorMsg("Can't send message because its size exceeds MAX_BUFF_LEN\n");
-  }
+  // if (numBytes > MAX_BUFF_LEN) {
+    // printErrorMsg("Can't send message because its size exceeds MAX_BUFF_LEN\n");
+  // }
   buff[strlen(buff)] = '\0';
 
   #if NETWORKING_DEBUG
@@ -110,31 +111,74 @@ int receiveMessage(char *buff, int descriptor) {
   return numBytesRcvd;
 }
 
-void receiveFile(FILE *file, char *buff, int descriptor) {
+void receiveFile(char *buff, int descriptor, char *filename) {
+  FILE *file = fopen(filename, "a");
+  if (file == NULL) {
+    printErrorMsg("fopen() failed in receiveFile function");
+  }
+  printf("Created new file `%s` successfully.\n", filename);
+
   bzero(buff, MAX_BUFF_LEN);
-  int numBytesRcvd = 0;
-  while (1) {
-    int result = read(descriptor, buff, MAX_BUFF_LEN);
-    if (result < 0) {
-      printErrorMsg("read() failed\n");
-    } else if (result == 0) {
-      break;
+
+  int numBytesRcvd = -1;
+  while ((numBytesRcvd = recv(descriptor, buff, MAX_BUFF_LEN, 0)) > 0) {
+    printf("Successfully read %d bytes through the socket.\n", numBytesRcvd);
+    int numBytesWritten = fwrite(buff, sizeof(char), numBytesRcvd, file);
+    if (numBytesWritten < numBytesRcvd) {
+      printErrorMsg("fwrite() failed to write the bytes to disk");
     }
+    printf("Successfully wrote %d bytes to disk.\n", numBytesWritten);
 
-    numBytesRcvd += result;
-
-    int hasNullTerminator = strchr(buff, '\0') != NULL;
-    if (hasNullTerminator) {
-      --numBytesRcvd;
-    }
-
-    int bytesWritten = fwrite(buff, 1, numBytesRcvd, file);
-    if (hasNullTerminator) {
+    bzero(buff, MAX_BUFF_LEN);
+    if (numBytesRcvd == 0 || numBytesRcvd != MAX_BUFF_LEN) {
       break;
     }
   }
+
+  fclose(file);
+
   if (numBytesRcvd < 0) {
-    printErrorMsg("read() failed");
+    printErrorMsg("recv() failed in receiveFile function");
+  } else if (numBytesRcvd == 0) {
+    printf("The peer closed its half of the connection.\n");
+    // TODO: probably a return code so that we can break...
+  } else {
+    printf("Finished downloading `%s`.\n", filename);
   }
 }
 
+void sendFile(int descriptor, char *filename) {
+  char *buff = malloc(MAX_BUFF_LEN);
+
+  FILE *file = fopen(filename, "rb+");
+  if (file == NULL) {
+    free(buff);
+    printErrorMsg("fopen() failed in receiveFile function");
+  }
+  printf("Opened `%s` successfully.\n", filename);
+
+  int numBytesRead = -1;
+  while ((numBytesRead = fread(buff, sizeof(char), MAX_BUFF_LEN, file)) > 0) {
+    printf("Successfully read %d bytes from the file.\n", numBytesRead);
+    int numBytesSent = send(descriptor, buff, numBytesRead, 0);
+    if (numBytesSent < 0) {
+      free(buff);
+      printErrorMsg("send() failed");
+    }
+    printf("Successfully transmitted %d bytes over the socket.\n", numBytesSent);
+    bzero(buff, MAX_BUFF_LEN);
+  }
+
+  if (feof(file)) {
+    printf("Reached EOF.\n");
+  }
+
+  if (ferror(file)) {
+    free(buff);
+    printErrorMsg("fread() failed");
+  }
+
+  fclose(file);
+  free(buff);
+  printf("Finished sending file.\n");
+}

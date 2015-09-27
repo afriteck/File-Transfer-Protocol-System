@@ -7,6 +7,8 @@
 #include <dirent.h>
 #include "ftpDefs.h"
 
+// TODO: verify that it works in the Linux VM
+
 void ls(char **output) {
   DIR* directory = opendir("./");
   if (directory == NULL) {
@@ -22,32 +24,6 @@ void ls(char **output) {
   closedir(directory);
 }
 
-void get(char *filename, char **output) {
-  FILE* file = fopen(concat("./", filename), "rb");
-  if (file == NULL) {
-    printErrorMsg("open() failed");
-  }
-
-  while (1) {
-    int bytesRead = fread(*output, 1, MAX_BUFF_LEN, file);
-    if (bytesRead < 0) {
-      printErrorMsg("fread() failed");
-    }
-    if (bytesRead < MAX_BUFF_LEN) {
-      if (ferror(file)) {
-        printErrorMsg("something bad happened.");
-      }
-      if (feof(file)) {
-        break;
-      }
-    } else {
-      // TODO!!
-    }
-    fclose(file);
-  }
-
-}
-
 int makeDirectory(char *name, char **output) {
   int result = mkdir(name, 0777);
   if (result == 0) {
@@ -58,8 +34,9 @@ int makeDirectory(char *name, char **output) {
   return result;
 }
 
-void processRequest(char *request, char **reply) {
-  bzero(*reply, MAX_BUFF_LEN);
+void processRequest(char *request, int descriptor) {
+  char *reply = malloc(MAX_BUFF_LEN);
+  bzero(reply, MAX_BUFF_LEN);
 
   char* trimBuff = trimStringAfter(request);
   char* mergeStringForMakeDirectory = concat("mkdir ", trimBuff);
@@ -67,20 +44,25 @@ void processRequest(char *request, char **reply) {
   char* mergeStringForGet           = concat("get ", trimBuff);
 
   if ((strcmp(request, "ls")) == 0) {
-    ls(reply);
+    ls(&reply);
+    sendMessage(reply, descriptor);
   }
   else if ((strcmp(request, mergeStringForMakeDirectory)) == 0) {
-    makeDirectory(trimBuff, reply);
+    makeDirectory(trimBuff, &reply);
+    sendMessage(reply, descriptor);
   }
   else if ((strcmp(request, mergeStringForGet)) == 0) {
-    get(trimBuff, reply);
+    sendFile(descriptor, trimBuff);
   }
   else {
-    sprintf(*reply, "%s: command not found\n", request);
+    sprintf(reply, "%s: command not found\n", request);
+    sendMessage(reply, descriptor);
   }
 
   free(mergeStringForMakeDirectory);
   free(mergeStringForChngDirectory);
+  free(mergeStringForGet);
+  free(reply);
 }
 
 int main(int argc, char *argv[]) {
@@ -102,10 +84,9 @@ int main(int argc, char *argv[]) {
     char buffer[MAX_BUFF_LEN];
     receiveMessage(buffer, accept_socket);
 
-    char *reply = malloc(MAX_BUFF_LEN);
-    processRequest(buffer, &reply);
-    sendMessage(reply, accept_socket);
-    free(reply);
+    printf("---------- REQUEST: `%s` ----------\n", buffer);
+    processRequest(buffer, accept_socket);
+    printf("----------  END REQUEST  ----------\n\n");
   }
 
   close(accept_socket);
@@ -113,4 +94,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-

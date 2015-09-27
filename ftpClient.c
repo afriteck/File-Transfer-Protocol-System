@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include "ftpDefs.h"
 
 void getUserInput(char *buff) {
@@ -29,15 +30,12 @@ int main(int argc, char *argv[]) {
     getUserInput(buff);
     sendMessage(buff, descriptor);
 
-    if (startsWith(buff, "ls") > 0 || startsWith(buff, "mkdir") > 0 || startsWith(buff, "cd") > 0) {
+    if (startsWith(buff, "get") > 0) {
+      receiveFile(buff, descriptor, "download.png");
+    }
+    else {
       receiveMessage(buff, descriptor);
       printf("%s", buff);
-    }
-    else if (startsWith(buff, "get") > 0) {
-      FILE *file = fopen(trimStringAfter(buff), "ab");
-      receiveFile(file, buff, descriptor);
-      fclose(file);
-      printf("File downloaded!\n");
     }
   }
 
