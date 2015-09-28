@@ -24,14 +24,24 @@ void ls(char **output) {
   closedir(directory);
 }
 
-int makeDirectory(char *name, char **output) {
+void changeDirectory(char* name, char** output) {
+  int result = chdir(name);
+  
+  if ( result == 0 ) {
+    sprintf(*output, "Changed to directory: %s.\n", name);
+  }
+  else {
+    sprintf(*output, "Failed to change directory: %s.\n", name);
+  }
+}
+
+void makeDirectory(char *name, char **output) {
   int result = mkdir(name, 0777);
   if (result == 0) {
     sprintf(*output, "Directory `%s` created.\n", name);
   } else {
     sprintf(*output, "Failed to created directory `%s`.\n", name);
   }
-  return result;
 }
 
 void processRequest(char *request, int descriptor) {
@@ -40,11 +50,16 @@ void processRequest(char *request, int descriptor) {
 
   char* trimBuff = trimStringAfter(request);
   char* mergeStringForMakeDirectory = concat("mkdir ", trimBuff);
-  char* mergeStringForChngDirectory = concat("cd ", trimBuff);
+  char* mergeStringForChangeDirectory = concat("cd ", trimBuff);
   char* mergeStringForGet           = concat("get ", trimBuff);
+  char* mergeStringForPut           = concat("put ", trimBuff);
 
   if ((strcmp(request, "ls")) == 0) {
     ls(&reply);
+    sendMessage(reply, descriptor);
+  }
+  else if ((strcmp(request, mergeStringForChangeDirectory)) == 0) {
+    changeDirectory(trimBuff, &reply);
     sendMessage(reply, descriptor);
   }
   else if ((strcmp(request, mergeStringForMakeDirectory)) == 0) {
@@ -54,13 +69,17 @@ void processRequest(char *request, int descriptor) {
   else if ((strcmp(request, mergeStringForGet)) == 0) {
     sendFile(descriptor, trimBuff);
   }
+  else if ((strcmp(request, mergeStringForPut)) == 0 ) {
+    //here
+     receiveFile(request, descriptor, "server.jpg");
+  }
   else {
     sprintf(reply, "%s: command not found\n", request);
     sendMessage(reply, descriptor);
   }
 
   free(mergeStringForMakeDirectory);
-  free(mergeStringForChngDirectory);
+  free(mergeStringForChangeDirectory);
   free(mergeStringForGet);
   free(reply);
 }

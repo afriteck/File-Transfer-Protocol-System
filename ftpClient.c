@@ -31,7 +31,16 @@ int main(int argc, char *argv[]) {
     sendMessage(buff, descriptor);
 
     if (startsWith(buff, "get") > 0) {
-      receiveFile(buff, descriptor, "download.png");
+      receiveFile(buff, descriptor, "download.jpg");
+    }
+    else if (startsWith(buff, "put") > 0) {
+      printf("put client\n");
+      sendFile(descriptor,trimStringAfter(buff));
+    }
+    else if ( startsWith(buff, "quit") > 0) {
+    printf("Good bye!\n");
+    close(descriptor);
+    exit(1);
     }
     else {
       receiveMessage(buff, descriptor);
