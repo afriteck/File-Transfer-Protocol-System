@@ -112,7 +112,7 @@ int receiveMessage(char *buff, int descriptor) {
 }
 
 void receiveFile(char *buff, int descriptor, char *filename) {
-  FILE *file = fopen(filename, "a");
+  FILE *file = fopen(filename, "wb+");
   if (file == NULL) {
     printErrorMsg("fopen() failed in receiveFile function");
   }
