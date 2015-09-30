@@ -112,7 +112,7 @@ int receiveMessage(char *buff, int descriptor) {
 }
 
 void receiveFile(char *buff, int descriptor, char *filename) {
-  FILE *file = fopen(filename, "wb+");
+  FILE *file = fopen(filename, "a");
   if (file == NULL) {
     printErrorMsg("fopen() failed in receiveFile function");
   }
@@ -131,6 +131,7 @@ void receiveFile(char *buff, int descriptor, char *filename) {
 
     bzero(buff, MAX_BUFF_LEN);
     if (numBytesRcvd == 0 || numBytesRcvd != MAX_BUFF_LEN) {
+      printf("We are bailing since we received %d bytes", numBytesRcvd);
       break;
     }
   }

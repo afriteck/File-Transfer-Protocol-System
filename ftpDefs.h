@@ -1,4 +1,4 @@
-#define MAX_BUFF_LEN 90000
+#define MAX_BUFF_LEN 1024
 #define MAX_PENDING_CONNECTIONS 10
 
 #include <stdio.h>
