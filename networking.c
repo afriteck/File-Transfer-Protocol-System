@@ -125,7 +125,13 @@ void receiveFile(char *buff, int descriptor, char *filename) {
 
     numBytesRcvd += result;
   }
-  printf("Incoming file with a size of %u bytes.\n", fileSize);
+
+  if (fileSize == 0) {
+    printf("File `%s` was not found.\n", filename);
+    return;
+  } else {
+    printf("Incoming file with a size of %u bytes.\n", fileSize);
+  }
 
   FILE *file = fopen(filename, "ab");
   if (file == NULL) {
@@ -166,16 +172,18 @@ void sendFile(int descriptor, char *filename) {
   char *buff = malloc(MAX_BUFF_LEN);
 
   FILE *file = fopen(filename, "rb+");
-  if (file == NULL) {
-    free(buff);
-    printErrorMsg("fopen() failed in receiveFile function");
-  }
 
   // Determine the number of bytes that will be sent (i.e., file size)
-  fseek(file, 0L, SEEK_END);
-  uint32_t fileSize = ftell(file);
-  rewind(file);
-  printf("Opened `%s` successfully (%u bytes).\n", filename, fileSize);
+  uint32_t fileSize;
+  if (file == NULL) {
+    fileSize = 0;
+    printf("File `%s` does not exist.\n", filename);
+  } else {
+    fseek(file, 0L, SEEK_END);
+    fileSize = ftell(file);
+    rewind(file);
+    printf("Opened `%s` successfully (%u bytes).\n", filename, fileSize);
+  }
 
   int totalNumBytes = sizeof(uint32_t);
   int numBytesSent = 0;
@@ -185,6 +193,11 @@ void sendFile(int descriptor, char *filename) {
       printErrorMsg("Failed to send the message size header");
     }
     numBytesSent += result;
+  }
+
+  if (fileSize == 0) {
+    free(buff);
+    return;
   }
 
   totalNumBytes = fileSize;
