@@ -70,7 +70,7 @@ void processRequest(char *request, int descriptor) {
     sendFile(descriptor, trimBuff);
   }
   else if ((strcmp(request, mergeStringForPut)) == 0 ) {
-     receiveFile(request, descriptor, trimBuff);
+    receiveFile(request, descriptor, trimBuff);
   }
   else {
     sprintf(reply, "%s: command not found\n", request);
