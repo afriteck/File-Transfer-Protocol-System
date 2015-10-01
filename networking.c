@@ -6,6 +6,7 @@
 #include "ftpDefs.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #define NETWORKING_DEBUG 0
 
@@ -95,9 +96,15 @@ int receiveMessage(char *buff, int descriptor) {
   int numBytesRcvd = 0;
   while (1) {
     int result = recv(descriptor, buff, MAX_BUFF_LEN - numBytesRcvd, 0);
-    if (result < 0) {
+    if (result == 0 || (result < 0 && errno == ECONNRESET)) {
+      printf("Connection terminated by client.\n");
+      return -1;
+    }
+    else if (result < 0) {
       printErrorMsg("recv() failed\n");
     }
+
+    printf("We just recevied %d bytes", result);
     numBytesRcvd += result;
     if (strchr(buff, '\0') != NULL) { // The null terminator has been read
       break;
@@ -113,7 +120,7 @@ int receiveMessage(char *buff, int descriptor) {
 
 void receiveFile(char *buff, int descriptor, char *filename) {
   // Determine size of the incoming file
-  uint32_t fileSize = -1;
+  uint32_t fileSize;
   int totalNumBytes = sizeof(uint32_t);
   int numBytesRcvd = 0;
 
@@ -129,7 +136,8 @@ void receiveFile(char *buff, int descriptor, char *filename) {
   if (fileSize == 0) {
     printf("File `%s` was not found.\n", filename);
     return;
-  } else {
+  }
+  else {
     printf("Incoming file with a size of %u bytes.\n", fileSize);
   }
 
@@ -163,7 +171,8 @@ void receiveFile(char *buff, int descriptor, char *filename) {
 
   if (totalNumBytes == numBytesRcvd) {
     printf("Finished downloading %s!\n", filename);
-  } else {
+  }
+  else {
     printf("It seems like something went wrong while downloading %s.\n", filename);
   }
 }

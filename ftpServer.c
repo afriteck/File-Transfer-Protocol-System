@@ -96,18 +96,24 @@ int main(int argc, char *argv[]) {
   fflush(stdout);
 
   int accept_socket = -1;
-  acceptIncomingConnection(&listen_socket, &accept_socket);
 
   while (1) {
-    char buffer[MAX_BUFF_LEN];
-    receiveMessage(buffer, accept_socket);
+    acceptIncomingConnection(&listen_socket, &accept_socket);
 
-    printf("---------- REQUEST: `%s` ----------\n", buffer);
-    processRequest(buffer, accept_socket);
-    printf("----------  END REQUEST  ----------\n\n");
+    while (1) {
+      char buffer[MAX_BUFF_LEN];
+      if (receiveMessage(buffer, accept_socket) < 0) {
+        printf("Breaking out of the while loop.\n");
+        break;
+      }
+
+      printf("---------- REQUEST: `%s` ----------\n", buffer);
+      processRequest(buffer, accept_socket);
+      printf("----------  END REQUEST  ----------\n\n");
+    }
+
+    close(accept_socket);
   }
-
-  close(accept_socket);
   close(listen_socket);
 
   return 0;
