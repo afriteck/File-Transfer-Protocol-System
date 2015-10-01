@@ -158,7 +158,7 @@ void receiveFile(char *buff, int descriptor, char *filename) {
   if (totalNumBytes == numBytesRcvd) {
     printf("Finished downloading %s!\n", filename);
   } else {
-    printf("It seems like something went wrong while downloading %s.\n");
+    printf("It seems like something went wrong while downloading %s.\n", filename);
   }
 }
 
