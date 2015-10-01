@@ -112,8 +112,7 @@ int receiveMessage(char *buff, int descriptor) {
 }
 
 void receiveFile(char *buff, int descriptor, char *filename) {
-  // determine the size of a uint
-
+  // Determine size of the incoming file
   uint32_t fileSize = -1;
   int totalNumBytes = sizeof(uint32_t);
   int numBytesRcvd = 0;
@@ -126,8 +125,7 @@ void receiveFile(char *buff, int descriptor, char *filename) {
 
     numBytesRcvd += result;
   }
-  printf("Incoming message of size %u", fileSize);
-
+  printf("Incoming file with a size of %u bytes.\n", fileSize);
 
   FILE *file = fopen(filename, "ab");
   if (file == NULL) {
@@ -137,7 +135,6 @@ void receiveFile(char *buff, int descriptor, char *filename) {
 
   totalNumBytes = fileSize;
   numBytesRcvd = 0;
-
   bzero(buff, MAX_BUFF_LEN);
 
   while (numBytesRcvd < totalNumBytes) {
@@ -148,62 +145,21 @@ void receiveFile(char *buff, int descriptor, char *filename) {
 
     int writeResult = fwrite(buff, sizeof(char), recvResult, file);
     if (writeResult < recvResult) {
-      printf("the write result was %d an the recvResult was %d", writeResult, recvResult);
       printErrorMsg("fwrite() failed to write the bytes to disk");
     }
-    printf("Successfully wrote %d bytes to disk.\n", writeResult);
 
     bzero(buff, MAX_BUFF_LEN);
     numBytesRcvd += writeResult;
+    printf("%d out of %d bytes written to disk.\n", numBytesRcvd, totalNumBytes);
   }
 
   fclose(file);
 
   if (totalNumBytes == numBytesRcvd) {
-    printf("Ya did good kid\n");
+    printf("Finished downloading %s!\n", filename);
   } else {
-    printf("ya got work to do\n");
+    printf("It seems like something went wrong while downloading %s.\n");
   }
-
-  // retrieve that from the socket
-
-  // read from the socket and write to the file until you've seen the exact number of bytes
-
-
-  // FILE *file = fopen(filename, "a");
-  // if (file == NULL) {
-  //   printErrorMsg("fopen() failed in receiveFile function");
-  // }
-  // printf("Created new file `%s` successfully.\n", filename);
-
-  // bzero(buff, MAX_BUFF_LEN);
-
-  // int numBytesRcvd = -1;
-  // while ((numBytesRcvd = recv(descriptor, buff, MAX_BUFF_LEN, 0)) > 0) {
-  //   printf("Successfully read %d bytes through the socket.\n", numBytesRcvd);
-  //   int numBytesWritten = fwrite(buff, sizeof(char), numBytesRcvd, file);
-  //   if (numBytesWritten < numBytesRcvd) {
-  //     printErrorMsg("fwrite() failed to write the bytes to disk");
-  //   }
-  //   printf("Successfully wrote %d bytes to disk.\n", numBytesWritten);
-
-  //   bzero(buff, MAX_BUFF_LEN);
-  //   if (numBytesRcvd == 0 || numBytesRcvd != MAX_BUFF_LEN) {
-  //     printf("We are bailing since we received %d bytes", numBytesRcvd);
-  //     break;
-  //   }
-  // }
-
-  // fclose(file);
-
-  // if (numBytesRcvd < 0) {
-  //   printErrorMsg("recv() failed in receiveFile function");
-  // } else if (numBytesRcvd == 0) {
-  //   printf("The peer closed its half of the connection.\n");
-  //   // TODO: probably a return code so that we can break...
-  // } else {
-  //   printf("Finished downloading `%s`.\n", filename);
-  // }
 }
 
 void sendFile(int descriptor, char *filename) {
@@ -214,13 +170,12 @@ void sendFile(int descriptor, char *filename) {
     free(buff);
     printErrorMsg("fopen() failed in receiveFile function");
   }
-  printf("Opened `%s` successfully.\n", filename);
 
   // Determine the number of bytes that will be sent (i.e., file size)
   fseek(file, 0L, SEEK_END);
   uint32_t fileSize = ftell(file);
   rewind(file);
-  printf("Preparing to send %u bytes", fileSize);
+  printf("Opened `%s` successfully (%u bytes).\n", filename, fileSize);
 
   int totalNumBytes = sizeof(uint32_t);
   int numBytesSent = 0;
@@ -236,23 +191,20 @@ void sendFile(int descriptor, char *filename) {
   numBytesSent = 0;
 
   while (numBytesSent < totalNumBytes) {
-    // try to read max_buff_len bytes from the file.
-    // try to send that many bytes trhough the socket
     int numBytesRead = fread(buff, sizeof(char), MAX_BUFF_LEN, file);
     if (numBytesRead < 0) {
       printErrorMsg("fread() failed");
     }
-    printf("Successfully read %d bytes from the file.\n", numBytesRead);
 
     int result = send(descriptor, buff, numBytesRead, 0);
     if (numBytesSent < 0) {
       free(buff);
       printErrorMsg("send() failed");
     }
-    printf("Successfully transmitted %d bytes over the socket.\n", numBytesSent);
 
     bzero(buff, MAX_BUFF_LEN);
     numBytesSent += result;
+    printf("%d out of %d bytes sent over the socket.\n", numBytesSent, totalNumBytes);
   }
 
   if (feof(file)) {
@@ -263,31 +215,6 @@ void sendFile(int descriptor, char *filename) {
     free(buff);
     printErrorMsg("fread() failed");
   }
-  // send that number over the socket and verify that the number of bytes were sent
-  // keep looping until we have read and sent that exact amount of bytes
-
-
-
-  // int numBytesRead = -1;
-  // while ((numBytesRead = fread(buff, sizeof(char), MAX_BUFF_LEN, file)) > 0) {
-  //   printf("Successfully read %d bytes from the file.\n", numBytesRead);
-  //   int numBytesSent = send(descriptor, buff, numBytesRead, 0);
-  //   if (numBytesSent < 0) {
-  //     free(buff);
-  //     printErrorMsg("send() failed");
-  //   }
-  //   printf("Successfully transmitted %d bytes over the socket.\n", numBytesSent);
-  //   bzero(buff, MAX_BUFF_LEN);
-  // }
-
-  // if (feof(file)) {
-  //   printf("Reached EOF.\n");
-  // }
-
-  // if (ferror(file)) {
-  //   free(buff);
-  //   printErrorMsg("fread() failed");
-  // }
 
   fclose(file);
   free(buff);
