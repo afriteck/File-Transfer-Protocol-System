@@ -26,7 +26,7 @@ void ls(char **output) {
 
 void changeDirectory(char* name, char** output) {
   int result = chdir(name);
-  
+
   if ( result == 0 ) {
     sprintf(*output, "Changed to directory: %s.\n", name);
   }
@@ -70,8 +70,7 @@ void processRequest(char *request, int descriptor) {
     sendFile(descriptor, trimBuff);
   }
   else if ((strcmp(request, mergeStringForPut)) == 0 ) {
-    //here
-     receiveFile(request, descriptor, "server.jpg");
+     receiveFile(request, descriptor, trimBuff);
   }
   else {
     sprintf(reply, "%s: command not found\n", request);
