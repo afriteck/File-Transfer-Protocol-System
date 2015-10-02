@@ -7,8 +7,8 @@
 #include <dirent.h>
 #include "ftpDefs.h"
 
-// TODO: verify that it works in the Linux VM
-
+/* Handles view directory on the server and return 
+ * whats on the server side  directory */
 void ls(char **output) {
   DIR* directory = opendir("./");
   if (directory == NULL) {
@@ -24,9 +24,11 @@ void ls(char **output) {
   closedir(directory);
 }
 
+/* This changes directory on the server side to a directory
+ * that exists on the server if not print an error */
 void changeDirectory(char* name, char** output) {
   int result = chdir(name);
-  
+
   if ( result == 0 ) {
     sprintf(*output, "Changed to directory: %s.\n", name);
   }
@@ -35,6 +37,8 @@ void changeDirectory(char* name, char** output) {
   }
 }
 
+/* This creates a directory on the server when the client sends
+ * the command to server */
 void makeDirectory(char *name, char **output) {
   int result = mkdir(name, 0777);
   if (result == 0) {
@@ -44,15 +48,18 @@ void makeDirectory(char *name, char **output) {
   }
 }
 
+
+/* Process all request that is received from the client
+ * and perform their respective actions on them */
 void processRequest(char *request, int descriptor) {
   char *reply = malloc(MAX_BUFF_LEN);
   bzero(reply, MAX_BUFF_LEN);
 
-  char* trimBuff = trimStringAfter(request);
-  char* mergeStringForMakeDirectory = concat("mkdir ", trimBuff);
+  char* trimBuff                      = trimStringAfter(request);
+  char* mergeStringForMakeDirectory   = concat("mkdir ", trimBuff);
   char* mergeStringForChangeDirectory = concat("cd ", trimBuff);
-  char* mergeStringForGet           = concat("get ", trimBuff);
-  char* mergeStringForPut           = concat("put ", trimBuff);
+  char* mergeStringForGet             = concat("get ", trimBuff);
+  char* mergeStringForPut             = concat("put ", trimBuff);
 
   if ((strcmp(request, "ls")) == 0) {
     ls(&reply);
@@ -70,8 +77,7 @@ void processRequest(char *request, int descriptor) {
     sendFile(descriptor, trimBuff);
   }
   else if ((strcmp(request, mergeStringForPut)) == 0 ) {
-    //here
-     receiveFile(request, descriptor, "server.jpg");
+    receiveFile(request, descriptor, trimBuff);
   }
   else {
     sprintf(reply, "%s: command not found\n", request);
@@ -84,9 +90,10 @@ void processRequest(char *request, int descriptor) {
   free(reply);
 }
 
+
+/* Main for the server */
 int main(int argc, char *argv[]) {
-  // Do not continue unless all arguments have been provided
-  if (argc < 2) {
+  if (argc < 2) { // Do not continue unless all arguments have been provided.
     fprintf(stderr, "usage: %s <port>\n", argv[0]);
     exit(1);
   }
@@ -97,18 +104,24 @@ int main(int argc, char *argv[]) {
   fflush(stdout);
 
   int accept_socket = -1;
-  acceptIncomingConnection(&listen_socket, &accept_socket);
 
   while (1) {
-    char buffer[MAX_BUFF_LEN];
-    receiveMessage(buffer, accept_socket);
+    acceptIncomingConnection(&listen_socket, &accept_socket);
 
-    printf("---------- REQUEST: `%s` ----------\n", buffer);
-    processRequest(buffer, accept_socket);
-    printf("----------  END REQUEST  ----------\n\n");
+    while (1) {
+      char buffer[MAX_BUFF_LEN];
+      if (receiveMessage(buffer, accept_socket) < 0) {
+        printf("Breaking out of the while loop.\n");
+        break;
+      }
+
+      printf("---------- REQUEST: `%s` ----------\n", buffer);
+      processRequest(buffer, accept_socket);
+      printf("----------  END REQUEST  ----------\n\n");
+    }
+
+    close(accept_socket);
   }
-
-  close(accept_socket);
   close(listen_socket);
 
   return 0;

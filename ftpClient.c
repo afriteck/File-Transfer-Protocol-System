@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include "ftpDefs.h"
 
+/* Get user's command */
 void getUserInput(char *buff) {
   printf("> ");
   fflush(stdout);
@@ -13,6 +14,7 @@ void getUserInput(char *buff) {
   trimString(buff); // removes newline and adds null-terminator
 }
 
+/* Main for the client */
 int main(int argc, char *argv[]) {
   // Do not continue unless all arguments have been provided
   if (argc < 3) {
@@ -31,16 +33,15 @@ int main(int argc, char *argv[]) {
     sendMessage(buff, descriptor);
 
     if (startsWith(buff, "get") > 0) {
-      receiveFile(buff, descriptor, "download.jpg");
+      receiveFile(buff, descriptor, trimStringAfter(buff));
     }
     else if (startsWith(buff, "put") > 0) {
-      printf("put client\n");
-      sendFile(descriptor,trimStringAfter(buff));
+      sendFile(descriptor, trimStringAfter(buff));
     }
-    else if ( startsWith(buff, "quit") > 0) {
-    printf("Good bye!\n");
-    close(descriptor);
-    exit(1);
+    else if (startsWith(buff, "quit") > 0) {
+      printf("Goodbye!\n");
+      close(descriptor);
+      exit(1);
     }
     else {
       receiveMessage(buff, descriptor);
