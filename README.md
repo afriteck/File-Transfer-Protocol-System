@@ -1,9 +1,8 @@
-# COMP 3203 A: Assignment 1
 ## Team
-- Tope Babajide (Student #100815672)
-- Guelor Emanuel (Student #100884107)
-- Michael Lutaaya (Student #100843544)
-- Christian Michael (Student #100880637)
+- Tope Babajide
+- Guelor Emanuel
+- Michael Lutaaya
+- Christian Michael
 
 ## Compilation Instructions
 - To build the client and server in one step, type `make` into the command line.
